@@ -19,6 +19,9 @@ import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.DrawableCompat
 import android.view.inputmethod.InputMethodManager
 
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RectShape
+
 class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
 
@@ -47,13 +50,11 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
         editText.background = null // 移除下划线
 
-        // 设置输入光标颜色为白色并变窄
-        val cursorDrawable: Drawable? = ContextCompat.getDrawable(context, android.R.drawable.edit_text)
-        if (cursorDrawable != null) {
-            val wrappedDrawable = DrawableCompat.wrap(cursorDrawable)
-            DrawableCompat.setTint(wrappedDrawable, ContextCompat.getColor(context, android.R.color.white))
-            editText.textCursorDrawable = wrappedDrawable
-        }
+        // 设置输入光标颜色为不透明的白色并变窄
+        val cursorDrawable = ShapeDrawable(RectShape())
+        cursorDrawable.intrinsicWidth = 2 // 设置光标宽度
+        cursorDrawable.paint.color = ContextCompat.getColor(context, android.R.color.white)
+        editText.textCursorDrawable = cursorDrawable
 
         editText.imeOptions = EditorInfo.IME_ACTION_DONE // 在输入法上显示确定的效果
         editText.inputType = InputType.TYPE_CLASS_TEXT // 设置所有输入类型
