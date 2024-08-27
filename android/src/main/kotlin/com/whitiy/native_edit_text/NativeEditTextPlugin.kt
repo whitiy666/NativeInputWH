@@ -42,7 +42,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText = EditText(context)
         editText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
         editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
-        editText.textCursorDrawable?.setTint(ContextCompat.getColor(context, android.R.color.white))
+        editText.background = null // 移除下划线
 
         creationParams?.let { params ->
             params["isObscure"]?.let { isObscure ->
