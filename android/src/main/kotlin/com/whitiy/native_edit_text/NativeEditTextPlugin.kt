@@ -17,6 +17,7 @@ import android.view.inputmethod.EditorInfo
 import io.flutter.plugin.common.BinaryMessenger
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.DrawableCompat
+import android.view.inputmethod.InputMethodManager
 
 class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
@@ -46,7 +47,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
         editText.background = null // 移除下划线
 
-        // 设置输入光标颜色为白色
+        // 设置输入光标颜色为白色并变窄
         val cursorDrawable: Drawable? = ContextCompat.getDrawable(context, android.R.drawable.edit_text)
         if (cursorDrawable != null) {
             val wrappedDrawable = DrawableCompat.wrap(cursorDrawable)
@@ -55,6 +56,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         }
 
         editText.imeOptions = EditorInfo.IME_ACTION_DONE // 在输入法上显示确定的效果
+        editText.inputType = InputType.TYPE_CLASS_TEXT // 设置所有输入类型
 
         creationParams?.let { params ->
             params["isObscure"]?.let { isObscure ->
@@ -81,6 +83,9 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 methodChannel.invokeMethod("onSubmit", editText.text.toString())
+                // 关闭键盘
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(editText.windowToken, 0)
                 true
             } else {
                 false
