@@ -12,6 +12,12 @@ import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.inputmethod.EditorInfo
+import io.flutter.plugin.common.BinaryMessenger
+
+
 class NativeInputWidgetPlugin: FlutterPlugin {
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         binding.platformViewRegistry.registerViewFactory("com.whitiy.native_input_widget/native_input", NativeInputViewFactory())
@@ -48,7 +54,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
             }
         }
 
-        methodChannel = MethodChannel(FlutterPluginBinding.getBinaryMessenger(context), "com.whitiy.native_input_widget/native_input_$id")
+        methodChannel = MethodChannel(context.applicationContext as FlutterPlugin.FlutterPluginBinding).binaryMessenger, "com.whitiy.native_input_widget/native_input_$id")
         methodChannel.setMethodCallHandler(this)
 
         editText.addTextChangedListener(object : TextWatcher {
