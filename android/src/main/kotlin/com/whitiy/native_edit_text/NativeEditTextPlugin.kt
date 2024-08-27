@@ -47,7 +47,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.background = null // 移除下划线
 
         // 设置输入光标颜色为白色
-        val cursorDrawable: Drawable? = ContextCompat.getDrawable(context, android.R.drawable.text_cursor_drawable)
+        val cursorDrawable: Drawable? = ContextCompat.getDrawable(context, android.R.drawable.edit_text)
         if (cursorDrawable != null) {
             val wrappedDrawable = DrawableCompat.wrap(cursorDrawable)
             DrawableCompat.setTint(wrappedDrawable, ContextCompat.getColor(context, android.R.color.white))
