@@ -1,56 +1,62 @@
-import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-typedef TextChangedCallback = void Function(String text);
-typedef TextSubmittedCallback = void Function(String text);
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 class NativeInputWidget extends StatefulWidget {
-  final TextChangedCallback? onChange;
-  final TextSubmittedCallback? onSubmit;
+  final Function(String)? onChange;
+  final Function(String)? onSubmit;
   final bool isObscure;
-  final String placeholderText;
+  final String? placeholderText;
 
-  NativeInputWidget({
+  const NativeInputWidget({
     Key? key,
     this.onChange,
     this.onSubmit,
     this.isObscure = false,
-    this.placeholderText = '',
+    this.placeholderText,
   }) : super(key: key);
 
   @override
-  _NativeInputWidgetState createState() => _NativeInputWidgetState();
+  State<NativeInputWidget> createState() => _NativeInputWidgetState();
 }
 
 class _NativeInputWidgetState extends State<NativeInputWidget> {
-  late TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-    _controller.addListener(() {
-      if (widget.onChange != null) {
-        widget.onChange!(_controller.text);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      obscureText: widget.isObscure,
-      decoration: InputDecoration(
-        hintText: widget.placeholderText,
-      ),
-      onSubmitted: widget.onSubmit,
+    const String viewType = 'com.whitiy.native_input_widget/native_input';
+    final Map<String, dynamic> creationParams = <String, dynamic>{
+      'isObscure': widget.isObscure,
+      'placeholderText': widget.placeholderText,
+    };
+
+    return AndroidView(
+      viewType: viewType,
+      layoutDirection: TextDirection.ltr,
+      creationParams: creationParams,
+      creationParamsCodec: const StandardMessageCodec(),
+      onPlatformViewCreated: _onPlatformViewCreated,
     );
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _onPlatformViewCreated(int id) {
+    if (widget.onChange != null || widget.onSubmit != null) {
+      final channel = MethodChannel('com.whitiy.native_input_widget/native_input_$id');
+      channel.setMethodCallHandler((call) async {
+        switch (call.method) {
+          case 'onChange':
+            if (widget.onChange != null) {
+              widget.onChange!(call.arguments as String);
+            }
+            break;
+          case 'onSubmit':
+            if (widget.onSubmit != null) {
+              widget.onSubmit!(call.arguments as String);
+            }
+            break;
+        }
+      });
+    }
   }
 }

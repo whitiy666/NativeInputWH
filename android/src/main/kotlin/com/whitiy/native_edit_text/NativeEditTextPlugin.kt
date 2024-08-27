@@ -1,98 +1,80 @@
-package com.whitiy.native_edit_text
-
-
+package com.whitiy.native_input_widget
 
 import android.content.Context
-import android.graphics.Color
 import android.text.InputType
-import android.view.inputmethod.EditorInfo
+import android.view.View
 import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.TextView.OnEditorActionListener
-import androidx.core.widget.addTextChangedListener
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.platform.PlatformView
-
-
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
-
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.StandardMessageCodec
+import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-import io.flutter.plugin.platform.PlatformViewRegistry
 
+class NativeInputWidgetPlugin: FlutterPlugin {
+    override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        binding.platformViewRegistry.registerViewFactory("com.whitiy.native_input_widget/native_input", NativeInputViewFactory())
+    }
 
-import io.flutter.plugin.common.BinaryMessenger
+    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {}
+}
 
-
-
-class NativeInputWidgetFactory(private val messenger: BinaryMessenger) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+class NativeInputViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, id: Int, args: Any?): PlatformView {
-        val creationParams = args as? Map<String, Any?>
-        return NativeInputWidget(context, id, creationParams, MethodChannel(messenger, "native_input_widget"))
+        val creationParams = args as Map<String?, Any?>?
+        return NativeInputView(context, id, creationParams)
     }
 }
 
-class NativeInputWidgetPlugin : FlutterPlugin {
-
-    private lateinit var methodChannel: MethodChannel
-
-    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "native_input_widget")
-
-        flutterPluginBinding
-            .platformViewRegistry
-            .registerViewFactory("native_input_widget_view", NativeInputWidgetFactory(flutterPluginBinding.binaryMessenger))
-    }
-
-    override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        methodChannel.setMethodCallHandler(null)
-    }
-}
-
-
-class NativeInputWidget(context: Context, id: Int, creationParams: Map<String, Any?>?, channel: MethodChannel) : PlatformView {
+class NativeInputView(context: Context, id: Int, creationParams: Map<String?, Any?>?) : PlatformView, MethodChannel.MethodCallHandler {
     private val editText: EditText
+    private val methodChannel: MethodChannel
 
     init {
-        editText = EditText(context).apply {
-            // 设置输入文字颜色
-            setTextColor(Color.WHITE)
-            // 设置光标颜色
-            setHighlightColor(Color.WHITE)
-            // 设置 placeholderText
-            hint = creationParams?.get("placeholderText") as? String ?: ""
-            setHintTextColor(Color.GRAY)
-            // 设置密码输入类型
-            if (creationParams?.get("isObscure") as? Boolean == true) {
-                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            }
+        editText = EditText(context)
+        editText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
+        editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
+        editText.textCursorDrawable?.setTint(ContextCompat.getColor(context, android.R.color.white))
 
-            // onChange 事件监听
-            addTextChangedListener {
-                channel.invokeMethod("onChange", it.toString())
-            }
-
-            // onSubmit 事件监听
-            setOnEditorActionListener(OnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    channel.invokeMethod("onSubmit", text.toString())
-                    true
-                } else {
-                    false
+        creationParams?.let { params ->
+            params["isObscure"]?.let { isObscure ->
+                if (isObscure as Boolean) {
+                    editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 }
-            })
+            }
+            params["placeholderText"]?.let { placeholder ->
+                editText.hint = placeholder as String
+            }
         }
 
-        // 设置 Layout 参数
-        val layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        )
+        methodChannel = MethodChannel(FlutterPluginBinding.getBinaryMessenger(context), "com.whitiy.native_input_widget/native_input_$id")
+        methodChannel.setMethodCallHandler(this)
 
-        val frameLayout = FrameLayout(context)
-        frameLayout.addView(editText, layoutParams)
+        editText.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                methodChannel.invokeMethod("onChange", s.toString())
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        editText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                methodChannel.invokeMethod("onSubmit", editText.text.toString())
+                true
+            } else {
+                false
+            }
+        }
     }
 
-    override fun getView() = editText
+    override fun getView(): View = editText
 
     override fun dispose() {}
+
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        // 如果需要从Flutter端调用原生方法,可以在这里处理
+        result.notImplemented()
+    }
 }
