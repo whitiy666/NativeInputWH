@@ -1,4 +1,4 @@
-package com.whitiy.native_input_widget
+package com.whitiy.native_edit_text
 
 import android.content.Context
 import android.text.InputType
@@ -16,7 +16,7 @@ import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import io.flutter.plugin.common.BinaryMessenger
 
-class NativeInputWidgetPlugin: FlutterPlugin {
+class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
