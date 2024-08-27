@@ -11,29 +11,30 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.StandardMessageCodec
 import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
-
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import io.flutter.plugin.common.BinaryMessenger
 
-
 class NativeInputWidgetPlugin: FlutterPlugin {
+    private lateinit var binding: FlutterPlugin.FlutterPluginBinding
+
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        binding.platformViewRegistry.registerViewFactory("com.whitiy.native_input_widget/native_input", NativeInputViewFactory())
+        this.binding = binding
+        binding.platformViewRegistry.registerViewFactory("com.whitiy.native_input_widget/native_input", NativeInputViewFactory(binding.binaryMessenger))
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {}
 }
 
-class NativeInputViewFactory : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
+class NativeInputViewFactory(private val messenger: BinaryMessenger) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, id: Int, args: Any?): PlatformView {
         val creationParams = args as Map<String?, Any?>?
-        return NativeInputView(context, id, creationParams)
+        return NativeInputView(context, id, creationParams, messenger)
     }
 }
 
-class NativeInputView(context: Context, id: Int, creationParams: Map<String?, Any?>?) : PlatformView, MethodChannel.MethodCallHandler {
+class NativeInputView(context: Context, id: Int, creationParams: Map<String?, Any?>?, messenger: BinaryMessenger) : PlatformView, MethodChannel.MethodCallHandler {
     private val editText: EditText
     private val methodChannel: MethodChannel
 
@@ -54,7 +55,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
             }
         }
 
-        methodChannel = MethodChannel(context.applicationContext as FlutterPlugin.FlutterPluginBinding).binaryMessenger, "com.whitiy.native_input_widget/native_input_$id")
+        methodChannel = MethodChannel(messenger, "com.whitiy.native_input_widget/native_input_$id")
         methodChannel.setMethodCallHandler(this)
 
         editText.addTextChangedListener(object : TextWatcher {
