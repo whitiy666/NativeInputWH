@@ -43,6 +43,8 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
         editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
         editText.background = null // 移除下划线
+        editText.setTextCursorDrawable(ContextCompat.getDrawable(context, android.R.drawable.text_cursor_drawable))?.setTint(ContextCompat.getColor(context, android.R.color.white)) // 设置输入光标颜色为白色
+        editText.imeOptions = EditorInfo.IME_ACTION_DONE // 在输入法上显示确定的效果
 
         creationParams?.let { params ->
             params["isObscure"]?.let { isObscure ->
