@@ -15,6 +15,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
 import io.flutter.plugin.common.BinaryMessenger
+import android.graphics.drawable.Drawable
+import androidx.core.graphics.drawable.DrawableCompat
 
 class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
@@ -43,7 +45,15 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
         editText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
         editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
         editText.background = null // 移除下划线
-        editText.setTextCursorDrawable(ContextCompat.getDrawable(context, android.R.drawable.text_cursor_drawable))?.setTint(ContextCompat.getColor(context, android.R.color.white)) // 设置输入光标颜色为白色
+
+        // 设置输入光标颜色为白色
+        val cursorDrawable: Drawable? = ContextCompat.getDrawable(context, android.R.drawable.text_cursor_drawable)
+        if (cursorDrawable != null) {
+            val wrappedDrawable = DrawableCompat.wrap(cursorDrawable)
+            DrawableCompat.setTint(wrappedDrawable, ContextCompat.getColor(context, android.R.color.white))
+            editText.textCursorDrawable = wrappedDrawable
+        }
+
         editText.imeOptions = EditorInfo.IME_ACTION_DONE // 在输入法上显示确定的效果
 
         creationParams?.let { params ->
