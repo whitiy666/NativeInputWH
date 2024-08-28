@@ -64,7 +64,8 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
             try {
                 val f = TextView::class.java.getDeclaredField("mCursorDrawableRes")
                 f.isAccessible = true
-                f.set(editText, cursorDrawable)
+               // f.set(editText, cursorDrawable)
+                f.set(editText, R.drawable.cursor_drawable) // 使用新创建的资源ID
             } catch (e: Exception) {
                 e.printStackTrace()
             }
