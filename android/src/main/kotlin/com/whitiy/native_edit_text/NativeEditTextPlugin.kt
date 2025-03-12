@@ -27,8 +27,8 @@ import android.util.Log  // 添加 Log 类的导入
 import android.view.ViewGroup  // 添加 ViewGroup 类的导入
 
 
-import android.graphics.drawable.ShapeDrawable
-import android.graphics.drawable.shapes.RectShape
+//import android.graphics.drawable.ShapeDrawable
+//import android.graphics.drawable.shapes.RectShape
 
 class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
