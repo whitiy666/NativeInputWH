@@ -27,35 +27,15 @@ import android.widget.TextView
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
 
-class NativeEditTextPlugin: FlutterPlugin, ActivityAware {
+class NativeEditTextPlugin: FlutterPlugin {
     private lateinit var binding: FlutterPlugin.FlutterPluginBinding
-    private var activity: Activity? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         this.binding = binding
-        binding.platformViewRegistry.registerViewFactory(
-            "com.whitiy.native_input_widget/native_input",
-            NativeInputViewFactory(binding.binaryMessenger, activity)
-        )
+        binding.platformViewRegistry.registerViewFactory("com.whitiy.native_input_widget/native_input", NativeInputViewFactory(binding.binaryMessenger))
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {}
-
-    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-        activity = binding.activity
-    }
-
-    override fun onDetachedFromActivity() {
-        activity = null
-    }
-
-    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-        activity = binding.activity
-    }
-
-    override fun onDetachedFromActivityForConfigChanges() {
-        activity = null
-    }
 }
 
 class NativeInputViewFactory(private val messenger: BinaryMessenger) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
