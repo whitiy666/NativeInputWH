@@ -79,32 +79,27 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
             // 使用存储的 textWatcher 对象
             editText.addTextChangedListener(textWatcher)
 
-            // 设置输入光标颜色为不透明的白色并变窄
+            // 设置输入光标颜色为不透明的白色并变粗
             val cursorDrawable = ShapeDrawable(RectShape())
-            cursorDrawable.intrinsicWidth = 2 // 设置光标宽度
+            cursorDrawable.intrinsicWidth = 3 // 增加光标宽度为4像素，使其更粗
+            cursorDrawable.paint.color = ContextCompat.getColor(context, android.R.color.white) // 设置为白色
 
-//            cursorDrawable.paint.color = ContextCompat.getColor(context, android.R.color.white)
-//            // Alternative approach to set cursor color
-//            try {
-//                val f = TextView::class.java.getDeclaredField("mCursorDrawableRes")
-//                f.isAccessible = true
-//               // f.set(editText, cursorDrawable)
-//                f.set(editText, R.drawable.cursor_drawable) // 使用新创建的资源ID
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-            // 代替尝试使用反射设置光标颜色，可以尝试以下方法：
+            // Android 10+ (API 29+) 支持直接设置光标颜色
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                // Android 10+ 支持直接设置光标颜色
                 editText.textCursorDrawable = cursorDrawable
             } else {
+                // 对于较早的Android版本使用反射
                 try {
-                    // 对于较早的Android版本使用反射
-                    val f = TextView::class.java.getDeclaredField("mCursorDrawableRes")
-                    f.isAccessible = true
-                    f.set(editText, R.drawable.cursor_drawable)
+                    // 使用反射直接设置光标Drawable
+                    val field = TextView::class.java.getDeclaredField("mEditor")
+                    field.isAccessible = true
+                    val editor = field.get(editText)
+
+                    val cursorField = editor.javaClass.getDeclaredField("mCursorDrawable")
+                    cursorField.isAccessible = true
+                    cursorField.set(editor, arrayOf(cursorDrawable, cursorDrawable))
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    Log.e("NativeInputView", "Failed to set cursor color", e)
                 }
             }
 
