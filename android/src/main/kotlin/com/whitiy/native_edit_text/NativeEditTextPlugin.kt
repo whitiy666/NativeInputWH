@@ -18,10 +18,13 @@ import io.flutter.plugin.common.BinaryMessenger
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.DrawableCompat
 import android.view.inputmethod.InputMethodManager
-
 import android.os.Handler
 import android.os.Looper
 import android.widget.TextView
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RectShape
+import android.util.Log  // 添加 Log 类的导入
+import android.view.ViewGroup  // 添加 ViewGroup 类的导入
 
 
 import android.graphics.drawable.ShapeDrawable
@@ -52,12 +55,28 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lastNotifiedText = "" // 添加此变量声明
 
+    // 存储 TextWatcher 引用以便稍后移除
+    private val textWatcher = object : TextWatcher {
+        override fun afterTextChanged(s: Editable?) {
+            val currentText = s.toString()
+            if (currentText != lastNotifiedText) {
+                lastNotifiedText = currentText
+                methodChannel.invokeMethod("onChange", currentText)
+            }
+        }
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+    }
+
 
     init {
         mainHandler.post {
             editText.setTextColor(ContextCompat.getColor(context, android.R.color.white))
             editText.setHintTextColor(ContextCompat.getColor(context, android.R.color.darker_gray))
             editText.background = null // 移除下划线
+
+            // 使用存储的 textWatcher 对象
+            editText.addTextChangedListener(textWatcher)
 
             // 设置输入光标颜色为不透明的白色并变窄
             val cursorDrawable = ShapeDrawable(RectShape())
@@ -135,7 +154,7 @@ class NativeInputView(context: Context, id: Int, creationParams: Map<String?, An
 
     override fun dispose() {
         try {
-            // 确保文本监听器被移除
+            // 使用存储的 textWatcher 引用
             editText.removeTextChangedListener(textWatcher)
 
             // 确保在视图销毁时清理资源
